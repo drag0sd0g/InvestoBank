@@ -2,10 +2,7 @@ package com.investobank.services;
 
 import com.investobank.model.Order;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AuditServiceImpl implements AuditService {
 
@@ -55,7 +52,9 @@ public class AuditServiceImpl implements AuditService {
     private void doAuditOrder(Map<String, List<Order>> auditMap, String name, Order order){
         List<Order> orders = auditMap.get(name);
         if(orders == null){
-            auditMap.put(name, Arrays.asList(order));
+            List<Order> newOrderList = new ArrayList<>();
+            newOrderList.add(order);
+            auditMap.put(name, newOrderList);
         } else {
             orders.add(order);
         }

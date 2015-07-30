@@ -36,7 +36,7 @@ public class BrokerServiceImpl implements BrokerService {
 
         double targetCommissionPercentile = Integer.MIN_VALUE;
         for(BrokerCommission brokerCommission : brokerCommissions){
-            double interimCommissionPercentile = brokerCommission.calculateCommission(order.getAmount());
+            double interimCommissionPercentile = brokerCommission.calculateCommission(Math.abs(order.getAmount()));
             if(interimCommissionPercentile != VariableBrokerComission.COMMISSION_NOT_APPLICABLE_FOR_THIS_RANGE){
                 targetCommissionPercentile = interimCommissionPercentile;
                 break;
@@ -47,7 +47,8 @@ public class BrokerServiceImpl implements BrokerService {
             throw  new ValidCommissionNotFoundException("could not find any applicable rules for determining the right commission");
         }
 
-        return (order.getAmount() * digicoinQuote) + ((targetCommissionPercentile / 100d) * order.getAmount());
+        double transactionTotalNoCommission = Math.abs(order.getAmount()) * digicoinQuote;
+        return transactionTotalNoCommission + ((targetCommissionPercentile / 100) * transactionTotalNoCommission);
     }
 
     @Override
