@@ -1,15 +1,13 @@
-package com.investobank.services;
+package com.investobank.model;
 
 public class Order {
 
     private final String client;
     private final long amount;
-    private final OrderType orderType;
 
-    public Order(String client, long amount, OrderType orderType) {
+    public Order(String client, long amount) {
         this.client = client;
         this.amount = amount;
-        this.orderType = orderType;
     }
 
     public String getClient() {
@@ -18,9 +16,5 @@ public class Order {
 
     public long getAmount() {
         return amount;
-    }
-
-    public OrderType getOrderType() {
-        return orderType;
     }
 }

@@ -1,29 +1,40 @@
 package com.investobank.services;
 
-import com.sun.corba.se.pept.broker.Broker;
+import com.investobank.exceptions.BrokerOrderAmountExceeds100Exception;
+import com.investobank.exceptions.OrderNotMultipleOf10Exception;
+import com.investobank.exceptions.ValidCommissionNotFoundException;
+import com.investobank.model.Order;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class OrderServiceImpl implements OrderService {
 
-    private final Map<String, List<Order>> inMemoryOrderAudit;
+    private final List<BrokerService> brokers;
 
-    private final List<Broker> brokers;
+    private final AuditService auditService;
 
-    public OrderServiceImpl(List<Broker> brokers) {
+    public OrderServiceImpl(List<BrokerService> brokers, AuditService auditService) {
         this.brokers = Collections.unmodifiableList(brokers);
-        this.inMemoryOrderAudit = new HashMap<>();
+        this.auditService = auditService;
     }
 
     @Override
-    public void executeOrder(Order order) throws OrderNotMultipleOf10Exception {
+    public double executeOrder(Order order) throws OrderNotMultipleOf10Exception, BrokerOrderAmountExceeds100Exception, ValidCommissionNotFoundException {
         if(order.getAmount() % 10 != 0){
             throw new OrderNotMultipleOf10Exception("Order amount not a multiple of 10 but "+order.getAmount());
         }
 
+        double minQuote = Double.MAX_VALUE;
+        BrokerService selectedBroker = null;
+        for(BrokerService brokerService : brokers){
+            double currentQuote = brokerService.getQuote(order);
+            if(currentQuote < minQuote){
+                minQuote = currentQuote;
+                selectedBroker = brokerService;
+            }
+        }
 
+        auditService.auditOrder(order, selectedBroker);
+        return minQuote;
     }
 }
