@@ -29,6 +29,14 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderNotMultipleOf10Exception("Order amount not a multiple of 10 but " + order.getAmount());
         }
 
+        double totalTransaction = decideBestDealAndPerformOrder(order);
+
+        auditService.auditClientOrder(new OrderOutcome(order, totalTransaction));
+        return totalTransaction;
+    }
+
+    private double decideBestDealAndPerformOrder(Order order) throws OrderNotMultipleOf10Exception,
+            BrokerOrderAmountExceeds100Exception, ValidCommissionNotFoundException{
         //split orders into smaller ones if necessary (e.g. if order amount > 100)
         List<Order> splitOrders = order.split();
         double totalQuote = 0;
@@ -47,8 +55,6 @@ public class OrderServiceImpl implements OrderService {
             //audit the deal with the most affordable broker.
             auditService.auditBrokerOrder(new OrderOutcome(splitOrder, minQuote), selectedBroker);
         }
-
-        auditService.auditClientOrder(new OrderOutcome(order, totalQuote));
         return totalQuote;
     }
 }
