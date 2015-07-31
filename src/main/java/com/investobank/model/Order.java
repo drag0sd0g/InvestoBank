@@ -27,6 +27,7 @@ public class Order {
         return amount > 0;
     }
 
+    //split orders bigger than 100 into portions which fit the broker quota, e.g. 250 = 100 + 100 + 50
     public List<Order> split(){
         List<Order> splitOrders = new ArrayList<>();
         long totalAmount = Math.abs(amount);

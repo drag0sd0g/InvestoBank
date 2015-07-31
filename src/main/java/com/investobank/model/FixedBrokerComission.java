@@ -12,7 +12,7 @@ public class FixedBrokerComission implements BrokerCommission {
     }
 
     @Override
-    public double calculateCommission(long amount) {
+    public double decideCommission(long amount) {
         return commission;
     }
 }

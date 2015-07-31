@@ -68,9 +68,9 @@ public class AcceptanceTests {
 
         //9) Report client net positions: Client A 296.156 Client B 0 Client C -109.06
         Map<String, Double> netPositions = auditService.getClientNetPositions();
-//        assertEquals(296.156, netPositions.get("Client A"));
-//        assertEquals(0.0, netPositions.get("Client B"));
-//        assertEquals(-109.06, netPositions.get("Client C"));
+        assertEquals(296.156, netPositions.get("Client A"));
+        assertEquals(0.0, netPositions.get("Client B"));
+        assertEquals(-109.06, netPositions.get("Client C"));
 
         //10) Report number of Digicoins transacted by Broker: Broker 1 80 Broker 2 460
         Map<String, Long> digicoinTransactionsByBroker = auditService.getDigicoinTransactionsByBroker();

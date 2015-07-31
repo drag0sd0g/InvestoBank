@@ -29,7 +29,7 @@ public class BrokerServiceImpl implements BrokerService {
     @Override
     public double getQuote(Order order) throws OrderNotMultipleOf10Exception, BrokerOrderAmountExceeds100Exception, ValidCommissionNotFoundException {
         //check division by 10
-        if(order.getAmount() % 10 != 0){
+        if(order.getAmount() % OrderServiceImpl.ORDER_MULTIPLE_FACTOR != 0){
             throw new OrderNotMultipleOf10Exception("Order amount not a multiple of 10 but "+order.getAmount());
         }
 
@@ -38,25 +38,30 @@ public class BrokerServiceImpl implements BrokerService {
             throw new BrokerOrderAmountExceeds100Exception("Order amount bigger than 100. Actual amount: "+order.getAmount());
         }
 
+        //calculate commission with respect to input and pre-defined rules
         double targetCommissionPercentile = Integer.MIN_VALUE;
         for(BrokerCommission brokerCommission : brokerCommissions){
-            double interimCommissionPercentile = brokerCommission.calculateCommission(Math.abs(order.getAmount()));
+            double interimCommissionPercentile = brokerCommission.decideCommission(Math.abs(order.getAmount()));
             if(interimCommissionPercentile != VariableBrokerComission.COMMISSION_NOT_APPLICABLE_FOR_THIS_RANGE){
                 targetCommissionPercentile = interimCommissionPercentile;
                 break;
             }
         }
 
+        //edge case but still possible if the variable broker commissions are not properly defined
         if(targetCommissionPercentile == Integer.MIN_VALUE){
             throw  new ValidCommissionNotFoundException("could not find any applicable rules for determining the right commission");
         }
 
+        //calculate and return total cost for this order by this broker
         double transactionTotalNoCommission = Math.abs(order.getAmount()) * digicoinQuote;
-        return transactionTotalNoCommission + ((targetCommissionPercentile / MAX_DIGICOIN_ORDER_LIMIT) * transactionTotalNoCommission);
+        double commissionAddon = (targetCommissionPercentile / MAX_DIGICOIN_ORDER_LIMIT) * transactionTotalNoCommission;
+        return transactionTotalNoCommission + commissionAddon;
     }
 
     @Override
     public String getName() {
         return name;
     }
+
 }

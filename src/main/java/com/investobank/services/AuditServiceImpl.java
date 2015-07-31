@@ -2,6 +2,7 @@ package com.investobank.services;
 
 import com.investobank.model.OrderOutcome;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,13 +24,14 @@ public class AuditServiceImpl implements AuditService {
         Map<String, Double> rtn = new HashMap<>();
         for (Map.Entry<String, List<OrderOutcome>> clientOrderAuditEntry : inMemoryClientOrderAudit.entrySet()) {
             List<OrderOutcome> ordersForClient = clientOrderAuditEntry.getValue();
-            Double sumOfTransactions = 0d;
+            Double sumOfTransactionsPerDigicoin = 0d;
             Double allAmounts = 0d;
             for (OrderOutcome orderOutcome : ordersForClient) {
-                sumOfTransactions += orderOutcome.getPrice();
+                sumOfTransactionsPerDigicoin += orderOutcome.getPrice() / Math.abs(orderOutcome.getOrder().getAmount());
                 allAmounts += orderOutcome.getOrder().getAmount();
             }
-            rtn.put(clientOrderAuditEntry.getKey(), (sumOfTransactions / ordersForClient.size()) * allAmounts);
+            Double average = new Double(sumOfTransactionsPerDigicoin / ordersForClient.size()) * allAmounts;
+            rtn.put(clientOrderAuditEntry.getKey(), new BigDecimal(average).setScale(3, BigDecimal.ROUND_HALF_UP).doubleValue());
         }
         return rtn;
     }
@@ -49,9 +51,13 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Override
-    public void auditOrder(OrderOutcome orderOutcome, BrokerService broker) {
-        doAuditOrder(inMemoryClientOrderAudit, orderOutcome.getOrder().getClient(), orderOutcome);
+    public void auditBrokerOrder(OrderOutcome orderOutcome, BrokerService broker) {
         doAuditOrder(inMemoryBrokerOrderAudit, broker.getName(), orderOutcome);
+    }
+
+    @Override
+    public void auditClientOrder(OrderOutcome orderOutcome) {
+        doAuditOrder(inMemoryClientOrderAudit, orderOutcome.getOrder().getClient(), orderOutcome);
     }
 
     private void doAuditOrder(Map<String, List<OrderOutcome>> auditMap, String name, OrderOutcome orderOutcome){

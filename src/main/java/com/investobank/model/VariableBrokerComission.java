@@ -27,7 +27,7 @@ public class VariableBrokerComission implements BrokerCommission {
     }
 
     @Override
-    public double calculateCommission(long amount) {
+    public double decideCommission(long amount) {
         return getMinAmount() <= amount && amount <= getMaxAmount() ?
                 getCommission() : COMMISSION_NOT_APPLICABLE_FOR_THIS_RANGE;
     }
