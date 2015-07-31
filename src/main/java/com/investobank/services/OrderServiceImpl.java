@@ -19,22 +19,28 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public double executeOrder(Order order) throws OrderNotMultipleOf10Exception, BrokerOrderAmountExceeds100Exception, ValidCommissionNotFoundException {
-        if(order.getAmount() % 10 != 0){
-            throw new OrderNotMultipleOf10Exception("Order amount not a multiple of 10 but "+order.getAmount());
+    public double executeOrder(Order order) throws OrderNotMultipleOf10Exception,
+            BrokerOrderAmountExceeds100Exception, ValidCommissionNotFoundException {
+        if (order.getAmount() % 10 != 0) {
+            throw new OrderNotMultipleOf10Exception("Order amount not a multiple of 10 but " + order.getAmount());
         }
 
-        double minQuote = Double.MAX_VALUE;
-        BrokerService selectedBroker = null;
-        for(BrokerService brokerService : brokers){
-            double currentQuote = brokerService.getQuote(order);
-            if(currentQuote < minQuote){
-                minQuote = currentQuote;
-                selectedBroker = brokerService;
+        List<Order> splitOrders = order.split();
+        double totalQuote = 0;
+        for(Order splitOrder : splitOrders) {
+            double minQuote = Double.MAX_VALUE;
+            BrokerService selectedBroker = null;
+            for (BrokerService brokerService : brokers) {
+                double currentQuote = brokerService.getQuote(splitOrder);
+                if (currentQuote < minQuote) {
+                    minQuote = currentQuote;
+                    selectedBroker = brokerService;
+                }
             }
+            totalQuote+=minQuote;
+            auditService.auditOrder(order, selectedBroker);
         }
 
-        auditService.auditOrder(order, selectedBroker);
-        return minQuote;
+        return totalQuote;
     }
 }
