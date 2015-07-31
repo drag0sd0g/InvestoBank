@@ -12,6 +12,8 @@ import java.util.List;
 
 public class BrokerServiceImpl implements BrokerService {
 
+    public static final int MAX_DIGICOIN_ORDER_LIMIT = 100;
+
     private final List<BrokerCommission> brokerCommissions;
 
     private final double digicoinQuote;
@@ -26,11 +28,13 @@ public class BrokerServiceImpl implements BrokerService {
 
     @Override
     public double getQuote(Order order) throws OrderNotMultipleOf10Exception, BrokerOrderAmountExceeds100Exception, ValidCommissionNotFoundException {
+        //check division by 10
         if(order.getAmount() % 10 != 0){
             throw new OrderNotMultipleOf10Exception("Order amount not a multiple of 10 but "+order.getAmount());
         }
 
-        if(Math.abs(order.getAmount()) > 100){
+        //check max allowed amount
+        if(Math.abs(order.getAmount()) > MAX_DIGICOIN_ORDER_LIMIT){
             throw new BrokerOrderAmountExceeds100Exception("Order amount bigger than 100. Actual amount: "+order.getAmount());
         }
 
@@ -48,7 +52,7 @@ public class BrokerServiceImpl implements BrokerService {
         }
 
         double transactionTotalNoCommission = Math.abs(order.getAmount()) * digicoinQuote;
-        return transactionTotalNoCommission + ((targetCommissionPercentile / 100) * transactionTotalNoCommission);
+        return transactionTotalNoCommission + ((targetCommissionPercentile / MAX_DIGICOIN_ORDER_LIMIT) * transactionTotalNoCommission);
     }
 
     @Override

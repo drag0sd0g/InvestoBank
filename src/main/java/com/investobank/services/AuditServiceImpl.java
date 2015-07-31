@@ -1,14 +1,17 @@
 package com.investobank.services;
 
-import com.investobank.model.Order;
+import com.investobank.model.OrderOutcome;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class AuditServiceImpl implements AuditService {
 
-    private final Map<String, List<Order>> inMemoryClientOrderAudit;
+    private final Map<String, List<OrderOutcome>> inMemoryClientOrderAudit;
 
-    private final Map<String, List<Order>> inMemoryBrokerOrderAudit;
+    private final Map<String, List<OrderOutcome>> inMemoryBrokerOrderAudit;
 
     public AuditServiceImpl() {
         this.inMemoryClientOrderAudit = new HashMap<>();
@@ -18,13 +21,15 @@ public class AuditServiceImpl implements AuditService {
     @Override
     public Map<String, Double> getClientNetPositions() {
         Map<String, Double> rtn = new HashMap<>();
-        for (Map.Entry<String, List<Order>> clientOrderAuditEntry : inMemoryClientOrderAudit.entrySet()) {
-            List<Order> ordersForClient = clientOrderAuditEntry.getValue();
-            Long sumOfTransactions = 0l;
-            for (Order order : ordersForClient) {
-                sumOfTransactions += order.getAmount();
+        for (Map.Entry<String, List<OrderOutcome>> clientOrderAuditEntry : inMemoryClientOrderAudit.entrySet()) {
+            List<OrderOutcome> ordersForClient = clientOrderAuditEntry.getValue();
+            Double sumOfTransactions = 0d;
+            Double allAmounts = 0d;
+            for (OrderOutcome orderOutcome : ordersForClient) {
+                sumOfTransactions += orderOutcome.getPrice();
+                allAmounts += orderOutcome.getOrder().getAmount();
             }
-            rtn.put(clientOrderAuditEntry.getKey(), (double) (sumOfTransactions * ordersForClient.size()));
+            rtn.put(clientOrderAuditEntry.getKey(), (sumOfTransactions / ordersForClient.size()) * allAmounts);
         }
         return rtn;
     }
@@ -32,11 +37,11 @@ public class AuditServiceImpl implements AuditService {
     @Override
     public Map<String, Long> getDigicoinTransactionsByBroker() {
         Map<String, Long> rtn = new HashMap<>();
-        for (Map.Entry<String, List<Order>> brokerOrderAuditEntry : inMemoryBrokerOrderAudit.entrySet()) {
-            List<Order> ordersForBroker = brokerOrderAuditEntry.getValue();
+        for (Map.Entry<String, List<OrderOutcome>> brokerOrderAuditEntry : inMemoryBrokerOrderAudit.entrySet()) {
+            List<OrderOutcome> ordersForBroker = brokerOrderAuditEntry.getValue();
             Long totalForBroker = 0l;
-            for (Order order : ordersForBroker) {
-                totalForBroker += Math.abs(order.getAmount());
+            for (OrderOutcome orderOutcome : ordersForBroker) {
+                totalForBroker += Math.abs(orderOutcome.getOrder().getAmount());
             }
             rtn.put(brokerOrderAuditEntry.getKey(), totalForBroker);
         }
@@ -44,19 +49,19 @@ public class AuditServiceImpl implements AuditService {
     }
 
     @Override
-    public void auditOrder(Order order, BrokerService broker) {
-        doAuditOrder(inMemoryClientOrderAudit, order.getClient(), order);
-        doAuditOrder(inMemoryBrokerOrderAudit, broker.getName(), order);
+    public void auditOrder(OrderOutcome orderOutcome, BrokerService broker) {
+        doAuditOrder(inMemoryClientOrderAudit, orderOutcome.getOrder().getClient(), orderOutcome);
+        doAuditOrder(inMemoryBrokerOrderAudit, broker.getName(), orderOutcome);
     }
 
-    private void doAuditOrder(Map<String, List<Order>> auditMap, String name, Order order){
-        List<Order> orders = auditMap.get(name);
-        if(orders == null){
-            List<Order> newOrderList = new ArrayList<>();
-            newOrderList.add(order);
-            auditMap.put(name, newOrderList);
+    private void doAuditOrder(Map<String, List<OrderOutcome>> auditMap, String name, OrderOutcome orderOutcome){
+        List<OrderOutcome> orderOutcomes = auditMap.get(name);
+        if(orderOutcomes == null){
+            List<OrderOutcome> newOrderOutcomeList = new ArrayList<>();
+            newOrderOutcomeList.add(orderOutcome);
+            auditMap.put(name, newOrderOutcomeList);
         } else {
-            orders.add(order);
+            orderOutcomes.add(orderOutcome);
         }
     }
 }

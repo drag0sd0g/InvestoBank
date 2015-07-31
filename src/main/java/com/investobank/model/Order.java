@@ -1,5 +1,7 @@
 package com.investobank.model;
 
+import com.investobank.services.BrokerServiceImpl;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,9 +31,10 @@ public class Order {
         List<Order> splitOrders = new ArrayList<>();
         long totalAmount = Math.abs(amount);
         while(totalAmount > 0){
-            if(totalAmount - 100 > 0) {
-                splitOrders.add(new Order(client, isBuy() ? 100 : -100));
-                totalAmount -= 100;
+            if(totalAmount - BrokerServiceImpl.MAX_DIGICOIN_ORDER_LIMIT > 0) {
+                splitOrders.add(new Order(client, isBuy() ? BrokerServiceImpl.MAX_DIGICOIN_ORDER_LIMIT :
+                        -BrokerServiceImpl.MAX_DIGICOIN_ORDER_LIMIT));
+                totalAmount -= BrokerServiceImpl.MAX_DIGICOIN_ORDER_LIMIT;
             } else {
                 splitOrders.add(new Order(client, isBuy() ? totalAmount : -totalAmount));
                 break;

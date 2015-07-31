@@ -2,7 +2,7 @@ package com.investobank.model;
 
 public class VariableBrokerComission implements BrokerCommission {
 
-    public static final int COMMISSION_NOT_APPLICABLE_FOR_THIS_RANGE = -1;
+    public static final double COMMISSION_NOT_APPLICABLE_FOR_THIS_RANGE = -1.0;
 
     private final long minAmount;
     private final long maxAmount;

@@ -4,6 +4,7 @@ import com.investobank.exceptions.BrokerOrderAmountExceeds100Exception;
 import com.investobank.exceptions.OrderNotMultipleOf10Exception;
 import com.investobank.exceptions.ValidCommissionNotFoundException;
 import com.investobank.model.Order;
+import com.investobank.model.OrderOutcome;
 
 import java.util.*;
 
@@ -38,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
             totalQuote+=minQuote;
-            auditService.auditOrder(order, selectedBroker);
+            auditService.auditOrder(new OrderOutcome(splitOrder, totalQuote), selectedBroker);
         }
 
         return totalQuote;
